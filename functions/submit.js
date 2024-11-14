@@ -12,8 +12,9 @@ exports.handler = async function(event, context) {
       const response = await client.query(
         q.Create(q.Collection("feedbacks"), {
           data: { studentId, ratings }
-        });
-      
+        })
+      );  // 闭合了 query 调用的括号
+
       // 返回成功响应
       return {
         statusCode: 200,
