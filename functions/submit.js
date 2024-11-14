@@ -1,6 +1,7 @@
+require('dotenv').config();
 const faunadb = require("faunadb");
 const q = faunadb.query;
-const client = new faunadb.Client({ secret: "your-fauna-secret" });
+const client = new faunadb.Client({ secret: process.env.FAUNADB_SECRET });
 
 exports.handler = async function(event, context) {
   if (event.httpMethod === 'POST') {
@@ -13,7 +14,7 @@ exports.handler = async function(event, context) {
         q.Create(q.Collection("feedbacks"), {
           data: { studentId, ratings }
         })
-      );  // 闭合了 query 调用的括号
+      );  
 
       // 返回成功响应
       return {
