@@ -1,7 +1,7 @@
 require('dotenv').config();
 const faunadb = require("faunadb");
 const q = faunadb.query;
-const client = new faunadb.Client({ secret: process.FAUNADB_SECRET });
+const client = new faunadb.Client({ secret: FAUNADB_SECRET });
 
 exports.handler = async function(event, context) {
   if (event.httpMethod === 'POST') {
