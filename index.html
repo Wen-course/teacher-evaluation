@@ -174,7 +174,11 @@
             const studentId = document.getElementById('student-id').value;
 
             // 上传数据
-            fetch('https://your-netlify-function-endpoint.com/submit', {
+            // fetch('https://your-netlify-function-endpoint.com/submit', {
+                fetch('https://teacher-evaluation.netlify.app/.netlify/netlify-functions/submit', {
+
+                
+
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
