@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教师满意度评价</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        h2 {
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            font-weight: bold;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .teacher-list {
+            margin-top: 20px;
+        }
+        .teacher-item {
+            margin-bottom: 20px;
+        }
+        .rating {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .rating label {
+            margin-right: 10px;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>教师满意度评价</h2>
+        <form id="student-form">
+            <div class="form-group">
+                <label for="name">学生姓名：</label>
+                <input type="text" id="name" required>
+            </div>
+            <div class="form-group">
+                <label for="student-id">学号：</label>
+                <input type="text" id="student-id" required>
+            </div>
+            <button type="submit" class="btn">查询选课教师</button>
+        </form>
+
+        <div id="teacher-list" class="teacher-list"></div>
+
+        <button id="submit-button" class="btn" style="display:none;">提交评价</button>
+    </div>
+
+    <script>
+        // 模拟的数据：学生和他们的选课教师
+        const studentsData = {
+            "20230001": { name: "张三", courses: [
+                { teacher: "李老师", course: "数学" },
+                { teacher: "王老师", course: "英语" }
+            ]},
+            "20230002": { name: "李四", courses: [
+                { teacher: "陈老师", course: "物理" },
+                { teacher: "赵老师", course: "化学" }
+            ]}
+        };
+
+        const studentForm = document.getElementById('student-form');
+        const teacherListContainer = document.getElementById('teacher-list');
+        const submitButton = document.getElementById('submit-button');
+
+        let selectedRatings = {};
+
+        studentForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const studentId = document.getElementById('student-id').value;
+
+            // 清空教师列表
+            teacherListContainer.innerHTML = "";
+
+            // 检查学生是否存在
+            const student = studentsData[studentId];
+            if (!student || student.name !== name) {
+                alert("学生信息不匹配，请检查输入的姓名和学号！");
+                return;
+            }
+
+            // 显示学生的选课教师列表
+            const teacherListHTML = student.courses.map(course => {
+                return `
+                    <div class="teacher-item" data-teacher="${course.teacher}">
+                        <h3>${course.course} - ${course.teacher}</h3>
+                        <div class="rating">
+                            <label>教学质量：</label>
+                            <select data-rating-type="quality">
+                                <option value="1">1 分</option>
+                                <option value="2">2 分</option>
+                                <option value="3">3 分</option>
+                                <option value="4">4 分</option>
+                                <option value="5">5 分</option>
+                            </select>
+                        </div>
+                        <div class="rating">
+                            <label>授课态度：</label>
+                            <select data-rating-type="attitude">
+                                <option value="1">1 分</option>
+                                <option value="2">2 分</option>
+                                <option value="3">3 分</option>
+                                <option value="4">4 分</option>
+                                <option value="5">5 分</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            teacherListContainer.innerHTML = teacherListHTML;
+
+            // 显示提交按钮
+            submitButton.style.display = "block";
+
+            // 收集评分
+            const selectElements = teacherListContainer.querySelectorAll('select');
+            selectElements.forEach(select => {
+                select.addEventListener('change', function () {
+                    const teacherName = select.closest('.teacher-item').getAttribute('data-teacher');
+                    const ratingType = select.getAttribute('data-rating-type');
+                    const ratingValue = select.value;
+
+                    if (!selectedRatings[teacherName]) {
+                        selectedRatings[teacherName] = {};
+                    }
+                    selectedRatings[teacherName][ratingType] = ratingValue;
+                });
+            });
+        });
+
+        // 提交按钮点击事件
+        submitButton.addEventListener('click', function () {
+            const studentId = document.getElementById('student-id').value;
+
+            // 上传数据
+            fetch('https://your-netlify-function-endpoint.com/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    studentId: studentId,
+                    ratings: selectedRatings
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert("评价提交成功！");
+                // 清除输入框内容
+                document.getElementById('name').value = '';
+                document.getElementById('student-id').value = '';
+                teacherListContainer.innerHTML = "";
+                submitButton.style.display = "none";
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("提交失败，请稍后重试。");
+            });
+        });
+    </script>
+
+</body>
+</html>
