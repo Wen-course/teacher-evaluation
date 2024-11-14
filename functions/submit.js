@@ -2,6 +2,7 @@ require('dotenv').config();  // 加载 .env 文件中的环境变量
 
 const faunadb = require("faunadb");
 const q = faunadb.query;
+console.log(process.env.FAUNADB_SECRET)
 const client = new faunadb.Client({ secret: process.env.FAUNADB_SECRET });
 
 exports.handler = async function(event, context) {
