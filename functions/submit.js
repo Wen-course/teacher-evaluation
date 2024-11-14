@@ -1,39 +1,29 @@
-require('dotenv').config();  // 加载 .env 文件中的环境变量
+import faunadb from 'faunadb';
 
-const faunadb = require("faunadb");
-const q = faunadb.query;
-console.log(process.env.FAUNADB_SECRET)
+// 从环境变量中加载 FaunaDB 的密钥
 const client = new faunadb.Client({ secret: process.env.FAUNADB_SECRET });
 
-exports.handler = async function(event, context) {
-  if (event.httpMethod === 'POST') {
-    try {
-      const data = JSON.parse(event.body); // 解析请求数据
-      const { studentId, ratings } = data;
-
-      // 调用 FaunaDB API，将反馈数据存入数据库
-      const response = await client.query(
-        q.Create(q.Collection("feedbacks"), {
-          data: { studentId, ratings }
-        })
-      );  
-
-      // 返回成功响应
-      return {
-        statusCode: 200,
-        body: JSON.stringify({ message: 'Feedback submitted successfully', data: response })
-      };
-    } catch (err) {
-      console.error('Error: ', err);  // 打印错误日志
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ error: 'Unable to submit feedback', details: err.message })
-      };
+export async function handler(event) {
+    if (event.httpMethod !== 'POST') {
+        return { statusCode: 405, body: 'Method Not Allowed' };
     }
-  }
 
-  return {
-    statusCode: 405,  // 方法不允许
-    body: JSON.stringify({ message: 'Method Not Allowed' })
-  };
-};
+    const data = JSON.parse(event.body);
+    const { name, studentId, course, teacherFeedback } = data;
+
+    try {
+        const result = await client.query(
+            faunadb.query.Create(
+                faunadb.query.Collection('feedbacks'),
+                { data: { name, studentId, course, teacherFeedback } }
+            )
+        );
+        return {
+            statusCode: 200,
+            body: JSON.stringify({ message: 'Feedback submitted successfully', result })
+        };
+    } catch (error) {
+        console.error('Error submitting feedback:', error);
+        return { statusCode: 500, body: JSON.stringify({ error: 'Failed to submit feedback' }) };
+    }
+}
